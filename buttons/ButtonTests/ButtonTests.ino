@@ -1,5 +1,7 @@
 #include <Arduino_FreeRTOS.h>
 
+volatile int painallukset;
+int sensorValue;
 // define two tasks for Blink & AnalogRead
 void TaskBlink( void *pvParameters );
 
@@ -32,21 +34,16 @@ void loop()
 
 void TaskAnalogRead(void *pvParameters)  // This is a task.
 {
-  (void) pvParameters;
 
-  for (;;)
-  {
-    int painallukset;
-    // read the input on analog pin 0:
-    int sensorValue = analogRead(A0);
-    // print out the value you read:
+  (void) pvParameters;
+  for (;;){
+    sensorValue = analogRead(A0);
     if(sensorValue > 0){
+    Serial.print(painallukset);
     Serial.println("Pohjassa");
     painallukset++;
+      }
     }
-    else if(sensorValue < 0){
-      
-    }
-    vTaskDelay(1);  // one tick delay (15ms) in between reads for stability
-  }
+    delay(100);
+    //vTaskDelay(1);
 }
