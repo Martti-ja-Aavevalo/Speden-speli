@@ -46,8 +46,13 @@ void loop() {
 
 void DisplayNum(int num)
 {
+  if(num == 99)
+  {
+    numero = 0;
+  }
   DisplayDigitSmall(num % 10);
   DisplayDigitBig(num / 10);
+
 }
 
 void DisplayDigitBig(int Digit)
