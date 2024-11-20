@@ -1,7 +1,12 @@
 #include <Arduino_FreeRTOS.h>
 
 volatile int painallukset;
-int sensorValue;
+int sensorValue1;
+int sensorValue2;
+int sensorValue3;
+int sensorValue4;
+char pressedPin;
+int pressed = 0;
 // define two tasks for Blink & AnalogRead
 void TaskBlink( void *pvParameters );
 
@@ -37,13 +42,22 @@ void TaskAnalogRead(void *pvParameters)  // This is a task.
 
   (void) pvParameters;
   for (;;){
-    sensorValue = analogRead(A0);
-    if(sensorValue > 0){
-    Serial.print(painallukset);
-    Serial.println("Pohjassa");
-    painallukset++;
+    sensorValue1 = analogRead(A0);
+    sensorValue2 = analogRead(A1);
+    //sensorValue3 = analogRead(A2);
+    //sensorValue4 = analogRead(A2);
+    if(sensorValue1 > 0){pressedPin = '1'; pressed = 1;}
+    if(sensorValue2 > 0){pressedPin = '2'; pressed = 1;}
+    if(sensorValue3 > 0){pressedPin = '3'; pressed = 1;}
+    if(sensorValue4 > 0){pressedPin = '4'; pressed = 1;}
+
+
+    if(pressed == 1){
+    delay(120);
+    Serial.print("Pressed pin: ");
+    Serial.println(pressedPin);
+    pressed = 0;
       }
     }
-    delay(100);
     //vTaskDelay(1);
 }
