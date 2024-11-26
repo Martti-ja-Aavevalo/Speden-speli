@@ -1,14 +1,15 @@
 int aktviivinenledi = -1;         
-int ledinviive = 1000;  
+int ledinviive = 1000; 
+int ledishowviive = 200; 
 
 void show1()
 {
-  
+  for(int i = 0; i < 16; i++)
+  {
+
+  }
 }
-void show2()
-{
-  
-}
+
 void setLed(byte pin) {
   digitalWrite(pin, HIGH);  
 }
@@ -25,12 +26,38 @@ void setAllLeds(void) {
   digitalWrite(A4, HIGH);  
   digitalWrite(A5, HIGH);  
 }
+void show2()
+{
+  for(int j = 0; j < 5; j++)
+  {
+    clearAllLeds();
+    digitalWrite(A2, HIGH);
+    delay(ledishowviive);
+    digitalWrite(A3, HIGH);
+    delay(ledishowviive);
+    digitalWrite(A4, HIGH);
+    delay(ledishowviive);
+    digitalWrite(A5, HIGH);
+    delay(ledishowviive);
+
+    ledishowviive -= 30;
+    if (ledishowviive < 50)
+     {
+      ledishowviive = 50;
+    }
+  }
+   setAllLeds();
+   delay(500);
+   clearAllLeds();
+}
 
 void setup() {
   pinMode(A2, OUTPUT);
   pinMode(A3, OUTPUT);
   pinMode(A4, OUTPUT);
   pinMode(A5, OUTPUT);
+
+  show2();
 }
 
 void loop() {
