@@ -4,10 +4,88 @@ int ledishowviive = 200;
 
 void show1()
 {
-  for(int i = 0; i < 16; i++)
-  {
-
-  }
+  digitalWrite(A2, LOW);  
+  digitalWrite(A3, LOW);  
+  digitalWrite(A4, LOW);  
+  digitalWrite(A5, LOW);  
+  delay(200);
+  digitalWrite(A2, HIGH);  
+  digitalWrite(A3, LOW);  
+  digitalWrite(A4, LOW);  
+  digitalWrite(A5, LOW);  
+  delay(400);
+  digitalWrite(A2, LOW);  
+  digitalWrite(A3, HIGH);  
+  digitalWrite(A4, LOW);  
+  digitalWrite(A5, LOW);  
+  delay(400);
+  digitalWrite(A2, HIGH);  
+  digitalWrite(A3, HIGH);  
+  digitalWrite(A4, LOW);  
+  digitalWrite(A5, LOW);  
+  delay(400);
+  digitalWrite(A2, LOW);  
+  digitalWrite(A3, LOW);  
+  digitalWrite(A4, HIGH);  
+  digitalWrite(A5, LOW);  
+  delay(400);
+  digitalWrite(A2, HIGH);  
+  digitalWrite(A3, LOW);  
+  digitalWrite(A4, HIGH);  
+  digitalWrite(A5, LOW);  
+  delay(400);
+  digitalWrite(A2, LOW);  
+  digitalWrite(A3, HIGH);  
+  digitalWrite(A4, HIGH);  
+  digitalWrite(A5, LOW);  
+  delay(400);
+  digitalWrite(A2, HIGH);  
+  digitalWrite(A3, HIGH);  
+  digitalWrite(A4, HIGH);  
+  digitalWrite(A5, LOW);  
+  delay(400);
+  digitalWrite(A2, LOW);  
+  digitalWrite(A3, LOW);  
+  digitalWrite(A4, LOW);  
+  digitalWrite(A5, HIGH);  
+  delay(400);
+  digitalWrite(A2, HIGH);  
+  digitalWrite(A3, LOW);  
+  digitalWrite(A4, LOW);  
+  digitalWrite(A5, HIGH);  
+  delay(400);
+  digitalWrite(A2, LOW);  
+  digitalWrite(A3, HIGH);  
+  digitalWrite(A4, LOW);  
+  digitalWrite(A5, HIGH);  
+  delay(400);
+  digitalWrite(A2, HIGH);  
+  digitalWrite(A3, HIGH);  
+  digitalWrite(A4, LOW);  
+  digitalWrite(A5, HIGH);  
+  delay(400);
+  digitalWrite(A2, LOW);  
+  digitalWrite(A3, LOW);  
+  digitalWrite(A4, HIGH);  
+  digitalWrite(A5, HIGH);  
+  delay(400);
+  digitalWrite(A2, HIGH);  
+  digitalWrite(A3, LOW);  
+  digitalWrite(A4, HIGH);  
+  digitalWrite(A5, HIGH);  
+  delay(400);
+  digitalWrite(A2, LOW);  
+  digitalWrite(A3, HIGH);  
+  digitalWrite(A4, HIGH);  
+  digitalWrite(A5, HIGH);  
+  delay(400);
+  digitalWrite(A2, HIGH);  
+  digitalWrite(A3, HIGH);  
+  digitalWrite(A4, HIGH);  
+  digitalWrite(A5, HIGH);  
+  delay(400);
+  clearAllLeds();
+  delay(750);
 }
 
 void setLed(byte pin) {
@@ -57,7 +135,8 @@ void setup() {
   pinMode(A4, OUTPUT);
   pinMode(A5, OUTPUT);
 
-  show2();
+  // show2();
+  show1();
 }
 
 void loop() {
@@ -75,8 +154,8 @@ void loop() {
   }
   delay(ledinviive); 
   clearAllLeds();
-  if (ledinviive > 200) {
+/*  if (ledinviive > 200) {
     ledinviive -= 50;
-  }
+  } */
   delay(200);  
 }
