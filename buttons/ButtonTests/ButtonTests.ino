@@ -1,63 +1,73 @@
 #include <Arduino_FreeRTOS.h>
 
-volatile int painallukset;
-int sensorValue1;
-int sensorValue2;
-int sensorValue3;
-int sensorValue4;
-char pressedPin;
-int pressed = 0;
-// define two tasks for Blink & AnalogRead
-void TaskBlink( void *pvParameters );
+const int Button1 = 2;
+const int Button2 = 3;
+const int Button3 = 4;
+const int Button4 = 5;
+int button1LastPressed = 0;
+int button2LastPressed = 0;
+int button3LastPressed = 0;
+int button4LastPressed = 0;
 
-// the setup function runs once when you press reset or power the board
+int debounce = 300;
+
+volatile int painallukset;
+
 void setup() {
   
-  // initialize serial communication at 9600 bits per second:
   Serial.begin(9600);
-  
-  while (!Serial) {
-    ; // wait for serial port to connect. Needed for native USB, on LEONARDO, MICRO, YUN, and other 32u4 based boards.
-  }
+
+  pinMode(Button1, INPUT_PULLUP);
+  pinMode(Button2, INPUT_PULLUP);
+  pinMode(Button3, INPUT_PULLUP);
+  pinMode(Button4, INPUT_PULLUP);
 
   xTaskCreate(
-    TaskAnalogRead
-    ,  "AnalogRead"
-    ,  128  // Stack size
+    ButtLogic
+    ,  "ButtLogic"
+    ,  128  
     ,  NULL
-    ,  1  // Priority
+    ,  1  
     ,  NULL );
 
-  // Now the task scheduler, which takes over control of scheduling individual tasks, is automatically started.
+ 
+}
+void loop(){
+
 }
 
-void loop()
-{
-  // Empty. Things are done in Tasks.
-}
-
-
-void TaskAnalogRead(void *pvParameters)  // This is a task.
+void ButtLogic(void *pvParameters)  
 {
 
-  (void) pvParameters;
-  for (;;){
-    sensorValue1 = analogRead(A0);
-    sensorValue2 = analogRead(A1);
-    //sensorValue3 = analogRead(A2);
-    //sensorValue4 = analogRead(A2);
-    if(sensorValue1 > 0){pressedPin = '1'; pressed = 1;}
-    if(sensorValue2 > 0){pressedPin = '2'; pressed = 1;}
-    if(sensorValue3 > 0){pressedPin = '3'; pressed = 1;}
-    if(sensorValue4 > 0){pressedPin = '4'; pressed = 1;}
+  while(true)
+    {
+      unsigned long currentMillis1 = millis();
 
 
-    if(pressed == 1){
-    delay(120);
-    Serial.print("Pressed pin: ");
-    Serial.println(pressedPin);
-    pressed = 0;
+      if(digitalRead(Button1) == LOW && currentMillis1 - button1LastPressed > debounce)
+      {
+        button1LastPressed = currentMillis1; 
+        Serial.println("Pressed pin: 1");
       }
+      unsigned long currentMillis2 = currentMillis1;
+      if(digitalRead(Button2) == LOW && currentMillis2 - button2LastPressed > debounce)
+      {
+        button2LastPressed = currentMillis2; 
+        Serial.println("Pressed pin: 2");
+      }
+      unsigned long currentMillis3 = currentMillis2;
+      if(digitalRead(Button3) == LOW && currentMillis3 - button3LastPressed > debounce)
+      {
+        button3LastPressed = currentMillis3; 
+        Serial.println("Pressed pin: 3");
+      }
+      unsigned long currentMillis4 = currentMillis3;
+      if(digitalRead(Button4) == LOW && currentMillis4 - button4LastPressed > debounce)
+      {
+        button4LastPressed = currentMillis4; 
+        Serial.println("Pressed pin: 4");
+      }
+
     }
-    //vTaskDelay(1);
+    vTaskDelay((50 / portTICK_PERIOD_MS));
 }
