@@ -6,7 +6,8 @@ int STCP_pin1 = 12;
 int SHCP_pin1 = 8;
 int DS_pin1 = 13;
 
-int numero = 0;
+int bigNum = 10;
+int num = 0;
 
 int digits [10][8]{
   {0,0,0,0,0,0,0,1}, // digit 0
@@ -20,8 +21,6 @@ int digits [10][8]{
   {1,0,0,0,0,0,0,0}, // digit 8
   {0,0,0,0,0,1,0,0}  // digit 9
 };
-
-int dec_digits[10] {0,1,2,3,4,5,6,7,8,9};
 
 void setup() {
   // put your setup code here, to run once:
@@ -38,21 +37,33 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
-  DisplayNum(numero);
+  DisplayNum(1);
   delay(500);
-  numero++;
-
 }
 
-void DisplayNum(int num)
+void DisplayNum(bool b)
 {
-  if(num == 99)
-  {
-    numero = 0;
-  }
-  DisplayDigitSmall(num % 10);
-  DisplayDigitBig(num / 10);
+  if(b)
+  { 
+    num++;
+    if(num == 99)
+    {
+      num = 0;
+    }
+    DisplayDigitSmall(num % 10);
+    if(num == bigNum)
+    {
+      DisplayDigitBig(num / 10);
+      bigNum += 10;
+    }
 
+  }
+  if(!b)
+  {
+    num = 0;
+    DisplayDigitSmall(0);
+    DisplayDigitBig(0);
+  }
 }
 
 void DisplayDigitBig(int Digit)
