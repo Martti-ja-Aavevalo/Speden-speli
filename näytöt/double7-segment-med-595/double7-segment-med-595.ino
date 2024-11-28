@@ -21,6 +21,7 @@ int digits [10][8]{
   {1,0,0,0,0,0,0,0}, // digit 8
   {0,0,0,0,0,1,0,0}  // digit 9
 };
+int dec_digits [10] {1, 79, 18, 6, 76, 36, 32, 15, 0, 4};
 
 void setup() {
   // put your setup code here, to run once:
@@ -46,9 +47,12 @@ void DisplayNum(bool b)
   if(b)
   { 
     num++;
-    if(num == 99)
+    if(num > 99)
     {
       num = 0;
+      bigNum = 10;
+      DisplayDigitSmall(0);
+      DisplayDigitBig(0);
     }
     DisplayDigitSmall(num % 10);
     if(num == bigNum)
