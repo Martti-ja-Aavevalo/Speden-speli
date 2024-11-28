@@ -4,10 +4,10 @@ const int Button1 = 2;
 const int Button2 = 3;
 const int Button3 = 4;
 const int Button4 = 5;
-int button1LastPressed = 0;
-int button2LastPressed = 0;
-int button3LastPressed = 0;
-int button4LastPressed = 0;
+long int button1LastPressed = 0;
+long int button2LastPressed = 0;
+long int button3LastPressed = 0;
+long int button4LastPressed = 0;
 
 int debounce = 300;
 
