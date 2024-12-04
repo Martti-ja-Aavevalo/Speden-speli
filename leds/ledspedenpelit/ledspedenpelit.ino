@@ -2,90 +2,40 @@ int aktviivinenledi = -1;
 int ledinviive = 1000; 
 int ledishowviive = 200; 
 
+void initializeLeds(){
+  pinMode(A2, OUTPUT);
+  pinMode(A3, OUTPUT);
+  pinMode(A4, OUTPUT);
+  pinMode(A5, OUTPUT);
+}
 void show1()
 {
-  digitalWrite(A2, LOW);  
-  digitalWrite(A3, LOW);  
-  digitalWrite(A4, LOW);  
-  digitalWrite(A5, LOW);  
-  delay(200);
-  digitalWrite(A2, HIGH);  
-  digitalWrite(A3, LOW);  
-  digitalWrite(A4, LOW);  
-  digitalWrite(A5, LOW);  
-  delay(400);
-  digitalWrite(A2, LOW);  
-  digitalWrite(A3, HIGH);  
-  digitalWrite(A4, LOW);  
-  digitalWrite(A5, LOW);  
-  delay(400);
-  digitalWrite(A2, HIGH);  
-  digitalWrite(A3, HIGH);  
-  digitalWrite(A4, LOW);  
-  digitalWrite(A5, LOW);  
-  delay(400);
-  digitalWrite(A2, LOW);  
-  digitalWrite(A3, LOW);  
-  digitalWrite(A4, HIGH);  
-  digitalWrite(A5, LOW);  
-  delay(400);
-  digitalWrite(A2, HIGH);  
-  digitalWrite(A3, LOW);  
-  digitalWrite(A4, HIGH);  
-  digitalWrite(A5, LOW);  
-  delay(400);
-  digitalWrite(A2, LOW);  
-  digitalWrite(A3, HIGH);  
-  digitalWrite(A4, HIGH);  
-  digitalWrite(A5, LOW);  
-  delay(400);
-  digitalWrite(A2, HIGH);  
-  digitalWrite(A3, HIGH);  
-  digitalWrite(A4, HIGH);  
-  digitalWrite(A5, LOW);  
-  delay(400);
-  digitalWrite(A2, LOW);  
-  digitalWrite(A3, LOW);  
-  digitalWrite(A4, LOW);  
-  digitalWrite(A5, HIGH);  
-  delay(400);
-  digitalWrite(A2, HIGH);  
-  digitalWrite(A3, LOW);  
-  digitalWrite(A4, LOW);  
-  digitalWrite(A5, HIGH);  
-  delay(400);
-  digitalWrite(A2, LOW);  
-  digitalWrite(A3, HIGH);  
-  digitalWrite(A4, LOW);  
-  digitalWrite(A5, HIGH);  
-  delay(400);
-  digitalWrite(A2, HIGH);  
-  digitalWrite(A3, HIGH);  
-  digitalWrite(A4, LOW);  
-  digitalWrite(A5, HIGH);  
-  delay(400);
-  digitalWrite(A2, LOW);  
-  digitalWrite(A3, LOW);  
-  digitalWrite(A4, HIGH);  
-  digitalWrite(A5, HIGH);  
-  delay(400);
-  digitalWrite(A2, HIGH);  
-  digitalWrite(A3, LOW);  
-  digitalWrite(A4, HIGH);  
-  digitalWrite(A5, HIGH);  
-  delay(400);
-  digitalWrite(A2, LOW);  
-  digitalWrite(A3, HIGH);  
-  digitalWrite(A4, HIGH);  
-  digitalWrite(A5, HIGH);  
-  delay(400);
-  digitalWrite(A2, HIGH);  
-  digitalWrite(A3, HIGH);  
-  digitalWrite(A4, HIGH);  
-  digitalWrite(A5, HIGH);  
-  delay(400);
+  for(int i = 0; i < 16; i++)
+  { 
+    if(i & (1 << 0)) {
+      digitalWrite(A2, HIGH);
+    } else {
+      digitalWrite(A2, LOW);
+    }
+    if(i & (1 << 1)){
+      digitalWrite(A3, HIGH);
+    } else {
+      digitalWrite(A3, LOW);
+    }
+    if(i & (1 << 2)){
+      digitalWrite(A4, HIGH);
+    } else {
+      digitalWrite(A4, LOW);
+    }
+    if(i & (1 << 3)){
+      digitalWrite(A5, HIGH);
+    } else {
+      digitalWrite(A5, LOW);
+    }
+    delay(400);
+  }
   clearAllLeds();
-  delay(750);
+  delay(ledinviive);
 }
 
 void setLed(byte pin) {
@@ -130,11 +80,8 @@ void show2()
 }
 
 void setup() {
-  pinMode(A2, OUTPUT);
-  pinMode(A3, OUTPUT);
-  pinMode(A4, OUTPUT);
-  pinMode(A5, OUTPUT);
 
+ initializeLeds();
   // show2();
   show1();
 }
