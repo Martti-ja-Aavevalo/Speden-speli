@@ -16,30 +16,6 @@ void setup() {
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
-
-  /*while (Serial.available() <= 0){}
-  reset = (Serial.read());
-  numerotutkimis();*/
-
-  /*for (int k = 0; k < 10; k++)
-  {
-    for (int j = 0; j < 10; j++)
-    {
-      for (int i = 0; i < 10; i++)
-      {
-        digitalWrite(STCP_pin, LOW);
-        shiftOut(DS_pin, SHCP_pin, LSBFIRST, dec_digits[k]);
-        shiftOut(DS_pin, SHCP_pin, LSBFIRST, dec_digits[j]);
-        shiftOut(DS_pin, SHCP_pin, LSBFIRST, dec_digits[i]);
-        digitalWrite(STCP_pin, HIGH);
-        dec_digits[0]++;
-        Serial.println(dec_digits[0]);
-        delay(700);
-      }
-    }
-  }*/
-
   printNum(1);
   delay(100);
 
