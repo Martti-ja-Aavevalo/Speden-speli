@@ -4,6 +4,7 @@
 
 void Buzzer( void *pvParameters );
 const int buzzer = 10;
+float songSpeed;
 void setup() {
   
   Serial.begin(9600);
@@ -33,8 +34,9 @@ void Buzzer(void *pvParameters)
   
 
   for (;;)
-  {
-
+  { 
+    //songSpeed+ 0.1;
+    songCompiler(songSpeed, 10);
   }
 
 }

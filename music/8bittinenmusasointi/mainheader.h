@@ -3,6 +3,6 @@
 
 extern int melodia[];
 
-void songCompiler(int);
+void songCompiler(float, int);
 
 #endif
