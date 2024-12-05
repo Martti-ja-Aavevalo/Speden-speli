@@ -86,15 +86,14 @@ void DisplayDigitBig(int Digit)
 }
 void DisplayDigitSmall(int Digit)
 {
-    digitalWrite(STCP_pin1,LOW);
-    for (int i = 8; i>=0; i--)
+  digitalWrite(STCP_pin1,LOW);
+  for (int i = 8; i>=0; i--)
    {
     digitalWrite(SHCP_pin1,LOW);
     Serial.println(digits[Digit][i]);
     if (digits[Digit][i]==1) digitalWrite(DS_pin1, LOW); 
     if (digits[Digit][i]==0) digitalWrite(DS_pin1, HIGH);
     digitalWrite(SHCP_pin1,HIGH);
-    //Serial.println(digits[Digit][i]);
-   }
-   digitalWrite(STCP_pin1, HIGH); 
+  }
+  digitalWrite(STCP_pin1, HIGH); 
 }
