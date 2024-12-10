@@ -1,8 +1,13 @@
+#include "mainheader.h"
+#include <Arduino.h>
+#include <EEPROM.h>
+
 // LEDS AND BUTTONS
 const int OrangeLed = A0;
 const int GreenLed = A1;
 const int YellowLed = A2;
 const int BlueLed = A3;
+const int SpeedUpLed = A4;
 
 const int OrangeButton = 2;
 const int GreenButton = 3;
@@ -10,17 +15,20 @@ const int YellowButton = 4;
 const int BlueButton = 5;
 
 const int StartButton = 6;
+const int BuzzerPin = 7;
 
 int RandomLed = 0;
 int PreviousLed = 0;
 int LedDelay = 1000;
 int CorrectPresses = 0;
+float MusicSpeed = 1;
 
 // TIMER AND SCORE
 unsigned long Timer = 10000;
 bool defeat = false;
 
 int LedShowDelay = 200;
+bool LedShow2Reverse = false;
 
 unsigned long lastTimerUpdate = 0;
 unsigned long lastLedTime = 0;
@@ -28,6 +36,8 @@ unsigned long lastLedTime = 0;
 int Score = 0;
 int HighScore;
 bool GameStarted = false;
+
+const int EEPROM_ADDR = 0;
 
 // ARRAYS
 const int ButtonOrder_Size = 100;
@@ -68,6 +78,7 @@ void setup() {
   pinMode(GreenLed, OUTPUT);
   pinMode(YellowLed, OUTPUT);
   pinMode(BlueLed, OUTPUT);
+  pinMode(SpeedUpLed, OUTPUT);
 
   pinMode(OrangeButton, INPUT_PULLUP);
   pinMode(GreenButton, INPUT_PULLUP);
@@ -76,6 +87,11 @@ void setup() {
 
   pinMode(StartButton, INPUT_PULLUP);
 
+  int SavedNum = 0;
+  EEPROM.get(EEPROM_ADDR, SavedNum);
+  HighScore = max(HighScore, SavedNum);
+  Serial.print("Current High Score: ");
+  Serial.println(HighScore);
   Serial.println("Press start!");
 }
 
@@ -119,6 +135,7 @@ void loop() {
   }
   if(GameStarted){
     LedLoop();
+    songCompiler(MusicSpeed, 10);
   }
   else{
     LedShow2();
@@ -127,11 +144,15 @@ void loop() {
 
 void ResetGame()
 {
+  int SavedNum = 0;
   CurrentB_Size = 0;
   CurrentI_Size = 0;
   Serial.print("Previous Score: ");
   Serial.println(Score);
+  EEPROM.get(EEPROM_ADDR, SavedNum);
+  HighScore = max(HighScore, SavedNum);
   HighScore = max(HighScore, Score);
+  EEPROM.put(EEPROM_ADDR, HighScore);
   Serial.print("Current High Score: ");
   Serial.println(HighScore);
   Score = 0;
@@ -164,6 +185,7 @@ void LedLoop() {
     }
     // Turn on random led
     if (millis() - lastLedTime >= LedDelay) {
+      digitalWrite(SpeedUpLed, LOW);
       lastLedTime = millis();
       addButtonPress();
       CorrectPresses++;
@@ -171,6 +193,7 @@ void LedLoop() {
       {
         LedDelay = max(200, LedDelay * 0.90); // delay decreaded 10% every 10 correct presses
         CorrectPresses = 0;
+        digitalWrite(SpeedUpLed, HIGH);
         Serial.println("Speeding up...");
       }
       /*Serial.print("LedDelay: ");
@@ -295,7 +318,7 @@ void LedShow1()
     } else {
       digitalWrite(BlueLed, LOW);
     }
-    delay(400);
+    delay(300);
   }
   clearAllLeds();
   delay(LedShowDelay);
@@ -305,23 +328,38 @@ void LedShow1()
 
 void LedShow2()
 {
+  int Led1 = OrangeLed;
+  int Led2 = GreenLed;
+  int Led3 = YellowLed;
+  int Led4 = BlueLed;
   //Serial.println("Running LED show...");
   if(!GameStarted)
   {
+    if(LedShow2Reverse){
+      Led1 = BlueLed;
+      Led2 = YellowLed;
+      Led3 = GreenLed;
+      Led4 = OrangeLed;
+    }else{
+      Led1 = OrangeLed;
+      Led2 = GreenLed;
+      Led3 = YellowLed;
+      Led4 = BlueLed;
+    }
     LedShowDelay = 200;
     for (int j = 0; j < 5; j++)
     {
       clearAllLeds();
-      digitalWrite(OrangeLed, HIGH);
+      digitalWrite(Led1, HIGH);
       if (digitalRead(StartButton) == threshold) return;
       delay(LedShowDelay);
-      digitalWrite(GreenLed, HIGH);
+      digitalWrite(Led2, HIGH);
       if (digitalRead(StartButton) == threshold) return;
       delay(LedShowDelay);
-      digitalWrite(YellowLed, HIGH);
+      digitalWrite(Led3, HIGH);
       if (digitalRead(StartButton) == threshold) return;
       delay(LedShowDelay);
-      digitalWrite(BlueLed, HIGH);
+      digitalWrite(Led4, HIGH);
       if (digitalRead(StartButton) == threshold) return;
       delay(LedShowDelay);
 
@@ -331,7 +369,7 @@ void LedShow2()
         LedShowDelay = 50;
       }
     }
-
+    LedShow2Reverse = !LedShow2Reverse;
     setAllLeds();
     delay(500);
     clearAllLeds();
