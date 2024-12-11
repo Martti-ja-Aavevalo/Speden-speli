@@ -67,6 +67,7 @@ void songCompiler(float songSpeed, int buzzer) {
 
     // Play the note
     tone(buzzer, melody[thisNote], noteDuration * 0.9);
+    //Serial.println("s");
 
     // Start timing the note
     previousMillis = currentMillis;
