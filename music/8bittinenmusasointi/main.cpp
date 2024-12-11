@@ -4,7 +4,7 @@
 int tempo = 122;
 
 
-
+//Melodiaosuus käyttää pitches.cpp kansiota jossa jokaiselle nuotille annetaan oikeat nuotit
 int melody[] = {
   //Eka säkeistö
     NOTE_A3, 12, NOTE_C3, 12, NOTE_D3, 9, NOTE_D3, 9, NOTE_D3, 12, NOTE_E3, 12, NOTE_F3, 9, NOTE_F3, 9, NOTE_F3, 12, NOTE_G3, 12,
@@ -42,37 +42,39 @@ int melody[] = {
  };
 
 int notes = sizeof(melody) / sizeof(melody[0]) / 2;
-// this calculates the duration of a whole note in ms
+//Lasketaan nuotin pituus millisekunteina
 int wholenote = (60000 * 4) / tempo;
 int divider = 0, noteDuration = 0;
 
 void songCompiler(float songSpeed, int buzzer){
 
 
-  // iterate over the notes of the melody.
-  // Remember, the array is twice the number of notes (notes + durations)
+  //Toistetaan melodian soinnut
+  //Lista on "tuplana" koska siinä on nuotit plus niiden pituus
   for (int thisNote = 0; thisNote < notes * 2; thisNote = thisNote + 2) {
-
-    // calculates the duration of each note
+    
+    //tsekataan jokaisen nuotin pituus
     divider = melody[thisNote + 1];
     if (divider > 0) {
-      // regular note, just proceed
+      // jos pituus on yli 0 jatketaan normisti
       noteDuration = (wholenote) / divider;
+
     } else if (divider < 0) {
-      // dotted notes are represented with negative durations!!
+      // Pisteelliset nuotit kestävät 1.5x nopeammin kuin norminuotit
       noteDuration = (wholenote) / abs(divider);
-      noteDuration *= 1.5; // increases the duration in half for dotted notes
+      noteDuration *= 1.5; //Kerrotaan duration 1x5
     }
 
-    // we only play the note for 90% of the duration, leaving 10% as a pause
+    //Nuotista soitetaan vain 90% (pieni tauko auttaa selventämään melodiaa)
     tone(buzzer, melody[thisNote], noteDuration * 0.9);
 
-    // Wait for the specief duration before playing the next note.
+    //Odotetaan kunnes seuraava nuotti soitetaan
     delay(noteDuration);
 
-    // stop the waveform generation before the next note.
+    //Varmistetaan ettei ylimääräistä ääntä pääse kuulumaan
     noTone(buzzer);
   }
 
 }
 
+//alkuperäisen koodin linkki: https://github.com/robsoncouto/arduino-songs/tree/master
