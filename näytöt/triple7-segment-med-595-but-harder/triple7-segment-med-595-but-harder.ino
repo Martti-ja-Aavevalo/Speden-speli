@@ -32,9 +32,12 @@ void loop() {
 
 void displaynum(int num)
 {
+  //    split given number to 3 parts
   int first = num % 10;
   int middle = (num / 10) % 10;
   int last = num / 100; 
+
+  //    push binary numbers to serial monitors bit by bit
   digitalWrite(STCP_pin1,LOW);
   for (int i = 7; i >= 0; i--)
   {
