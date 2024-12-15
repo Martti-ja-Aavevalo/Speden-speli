@@ -1,11 +1,16 @@
 #include "mainheader.h"
 #include <Arduino.h>
 #include <EEPROM.h>
+#include <LiquidCrystal_I2C.h>
 
 //Alpon näytöt
 int STCP_pin1 = 12;
 int SHCP_pin1 = 8;
 int DS_pin1 = 13;
+
+LiquidCrystal_I2C lcd(0x27,  16, 2);
+
+bool ScorePress = false;
 
 int digits [10][8]{
   {0,0,0,0,0,0,0,1}, // digit 0
@@ -19,6 +24,8 @@ int digits [10][8]{
   {1,0,0,0,0,0,0,0}, // digit 8
   {0,0,0,0,0,1,0,0}  // digit 9
 };
+
+int checkarrays = 0;
 
 // LEDS AND BUTTONS
 const int OrangeLed = A0;
@@ -45,6 +52,7 @@ float MusicSpeed = 1;
 unsigned long Timer = 10000;
 bool defeat = false;
 bool HardMode = false;//false
+bool PrevHardMode = false;
 
 int LedShowDelay = 200;
 bool LedShow2Reverse = false;
@@ -53,10 +61,13 @@ unsigned long lastTimerUpdate = 0;
 unsigned long lastLedTime = 0;
 
 int Score = 0;
-int HighScore;
+int HighScore, HardHighScore;
 bool GameStarted = false;
+bool StartGameStart = false; // :DDDDDDDDDDDD
+unsigned long StartTimer = 0;
 
 const int EEPROM_ADDR = 0;
+//const int EEPROM_ADDR_VAR2 = EEPROM_ADDR_VAR1 + sizeof(int);
 
 // ARRAYS
 const int ButtonOrder_Size = 100;
@@ -74,25 +85,17 @@ int PreviousArray = 0;
 
 // DEBOUNCE
 const int threshold = LOW; //low when pressed
-unsigned long debounceDelay = 300;
+unsigned long debounceDelay = 400;
 unsigned long lastPressedO = 0;
 unsigned long lastPressedG = 0;
 unsigned long lastPressedY = 0;
 unsigned long lastPressedB = 0;
 unsigned long lastPressedS = 0;
 
+unsigned long currentMillis = 0;
+
 const int ledPins[] = {OrangeLed, GreenLed, YellowLed, BlueLed};
 const int numLeds = sizeof(ledPins) / sizeof(ledPins[0]);
-
-// functions
-void addNumber(int arrayID, int number);
-void removeNumber(int arrayID, int index);
-void CheckArrays();
-void addButtonPress(int LedAmount);
-void setAllLeds();
-void clearAllLeds();
-void LedShow2();
-void LedShow1();
 
 void setup() {
   Serial.begin(9600);
@@ -117,64 +120,175 @@ void setup() {
   pinMode(SHCP_pin1, OUTPUT);
   pinMode(DS_pin1, OUTPUT);
 
-  int SavedNum = 0;
+  attachInterrupt(digitalPinToInterrupt(OrangeButton), handleOrangeButton, FALLING);
+  attachInterrupt(digitalPinToInterrupt(GreenButton), handleGreenButton, FALLING);
+
+  PCICR |= (1 << PCIE2);
+  PCMSK2 |= (1 << PCINT20) | (1 << PCINT21);
+
+
+  int SavedNum = 0, SavedNum2 = 0;
+
+  //EEPROM.put(EEPROM_ADDR_VAR1, 0);
+  //EEPROM.put(EEPROM_ADDR_VAR2, 0);
+
+  lcd.init();
+  lcd.backlight();
+
   EEPROM.get(EEPROM_ADDR, SavedNum);
+  //EEPROM.get(EEPROM_ADDR_VAR2, SavedNum2);
   HighScore = max(HighScore, SavedNum);
+  //HardHighScore = max(HardHighScore, SavedNum2);
+  displaynum(0);
   Serial.print("Current High Score: ");
   Serial.println(HighScore);
+  Serial.print("Current HardMode High Score: ");
+  Serial.println(HardHighScore);
   Serial.println("Press start!");
 }
 
 void loop() {
 
-  unsigned long currentMillis = millis();
-  // Orange button
-  if (digitalRead(OrangeButton) == threshold && currentMillis - lastPressedO > debounceDelay) {
-    lastPressedO = currentMillis;
-    addNumber(1, OrangeLed);
-    CheckArrays();
-    Timer = 10000;
-  }
-  // Green button
-  if (digitalRead(GreenButton) == threshold && currentMillis - lastPressedG > debounceDelay) {
-    lastPressedG = currentMillis;
-    addNumber(1, GreenLed);
-    CheckArrays();
-    Timer = 10000;
-  }
-  // Yellow button
-  if (digitalRead(YellowButton) == threshold && currentMillis - lastPressedY > debounceDelay) {
-    lastPressedY = currentMillis;
-    addNumber(1, YellowLed);
-    CheckArrays();
-    Timer = 10000;
-  }
-  // Blue button
-  if (digitalRead(BlueButton) == threshold && currentMillis - lastPressedB > debounceDelay) {
-    lastPressedB = currentMillis;
-    addNumber(1, BlueLed);
-    CheckArrays();
-    Timer = 10000;
-  }
-  //start button
-  if (digitalRead(StartButton) == threshold && currentMillis - lastPressedS > debounceDelay) {
-    lastPressedS = currentMillis;
-    if(!GameStarted){
+  currentMillis = millis();
+
+  if(StartGameStart)
+  {
+    if(currentMillis - StartTimer > 100){
       ResetGame();
+      StartGameStart = false;
     }
   }
   if(GameStarted){
+    lcd.setCursor(0, 0);
+    lcd.print(" Game started!   ");
+    if(HardMode){
+      lcd.setCursor(0, 1);
+      lcd.print(" [Hard Mode]    ");
+    }else{
+      lcd.setCursor(0, 1);
+      lcd.print(" [Normal Mode]   ");
+    }
     LedLoop();
-    songCompiler(MusicSpeed, BuzzerPin);
+    songCompiler(MusicSpeed, BuzzerPin, false);
   }
   else{
+    if(ScorePress)
+    {
+      ScorePress = !ScorePress;
+      lcd.setCursor(0, 0);
+      lcd.print("Highest score:    ");
+      lcd.setCursor(0, 1);
+      lcd.print("       ");
+      lcd.print(HighScore);
+      /*lcd.print(" Hard:");
+      lcd.print(HardHighScore);*/
+      lcd.print("        ");
+    }
+    else
+    {
+      ScorePress = !ScorePress;
+      lcd.setCursor(0, 0);
+      lcd.print("Press any button");
+      lcd.setCursor(0, 1);
+      lcd.print("   to start!    ");
+    }
     LedShow2();
+  }
+}
+
+void handleOrangeButton() {
+  // Orange button
+  if (digitalRead(OrangeButton) == threshold && currentMillis - lastPressedO > debounceDelay) {
+    lastPressedO = currentMillis;
+    Timer = 10000;
+    addNumber(1, OrangeLed);
+    CheckArrays();
+    if(!GameStarted){
+      TryStartGame();
+    }
+  }
+}
+
+void handleGreenButton() {
+  // Green button
+  if (digitalRead(GreenButton) == threshold && currentMillis - lastPressedG > debounceDelay) {
+    lastPressedG = currentMillis;
+    Timer = 10000;
+    addNumber(1, GreenLed);
+    CheckArrays();
+    if(!GameStarted){
+      TryStartGame();
+    }
+  }
+}
+
+ISR(PCINT2_vect) {
+  // Check if Pin 4 triggered the interrupt
+  if (digitalRead(YellowButton) == threshold && currentMillis - lastPressedY > debounceDelay) {
+    lastPressedY = currentMillis;
+    Timer = 10000;
+    addNumber(1, YellowLed);
+    CheckArrays();
+    if(!GameStarted){
+      TryStartGame();
+    }
+  }
+  // Check if Pin 5 triggered the interrupt
+  if (digitalRead(BlueButton) == threshold && currentMillis - lastPressedB > debounceDelay) {
+    lastPressedB = currentMillis;
+    Timer = 10000;
+    addNumber(1, BlueLed);
+    CheckArrays();
+    if(!GameStarted){
+      TryStartGame();
+    }
+  }
+}
+/*
+void handleYellowButton() {
+  // Yellow button
+  if (digitalRead(YellowButton) == threshold && currentMillis - lastPressedY > debounceDelay) {
+    lastPressedY = currentMillis;
+    Timer = 10000;
+    addNumber(1, YellowLed);
+    CheckArrays();
+    if(!GameStarted){
+      TryStartGame();
+    }
+  }
+}
+
+void handleBlueButton() {
+  // Blue button
+  if (digitalRead(BlueButton) == threshold && currentMillis - lastPressedB > debounceDelay) {
+    lastPressedB = currentMillis;
+    Timer = 10000;
+    addNumber(1, BlueLed);
+    CheckArrays();
+    if(!GameStarted){
+      TryStartGame();
+    }
+  }
+}*/
+
+void TryStartGame()
+{
+  if(StartGameStart){
+    HardMode = !HardMode;
+    if(HardMode){
+      Serial.println("Hardmode On!");
+    } else {
+      Serial.println("Hardmode Off.");
+    }
+  }else{
+    StartTimer = millis();
+    StartGameStart = true;
   }
 }
 
 void ResetGame()
 {
-  int SavedNum = 0;
+  int SavedNum = 0, SavedNum2 = 0;
   CurrentB_Size = 0;
   CurrentI_Size = 0;
   CurrentA_Size = 0;
@@ -182,17 +296,34 @@ void ResetGame()
   int PreviousArray = 0;
   Serial.print("Previous Score: ");
   Serial.println(Score);
-  EEPROM.get(EEPROM_ADDR, SavedNum);
-  HighScore = max(HighScore, SavedNum);
-  HighScore = max(HighScore, Score);
-  EEPROM.put(EEPROM_ADDR, HighScore);
-  Serial.print("Current High Score: ");
-  Serial.println(HighScore);
+  /*if(PrevHardMode)
+  {
+    EEPROM.get(EEPROM_ADDR_VAR2, SavedNum2);
+    HardHighScore = max(HardHighScore, SavedNum2);
+    HardHighScore = max(HardHighScore, Score);
+    EEPROM.put(EEPROM_ADDR_VAR2, HardHighScore);
+    Serial.print("Current HardMode High Score: ");
+    Serial.println(HardHighScore);
+  }
+  else
+  {
+    EEPROM.get(EEPROM_ADDR_VAR1, SavedNum);
+    HighScore = max(HighScore, SavedNum);
+    HighScore = max(HighScore, Score);
+    Serial.println(SavedNum);
+    Serial.println(HighScore);
+    EEPROM.put(EEPROM_ADDR_VAR1, HighScore);
+    Serial.print("Current High Score: ");
+    Serial.println(HighScore);
+  }*/
   Score = 0;
-  Timer = 10000;
   LedDelay = 1000;
   CorrectPresses = 0;
   defeat = false;
+  MusicSpeed = 1;
+  StartGameStart = false;
+  PrevHardMode = HardMode;
+  songCompiler(1.0, BuzzerPin, true);
   setAllLeds();
   delay(600);
   clearAllLeds();
@@ -227,10 +358,10 @@ void LedLoop() {
       else
       {
         int randomnum = random(1, (100 - Score));
-        if(Score >= 100 || randomnum <= 50)
+        if(Score >= 100 || randomnum <= 30)
         {
           randomnum = random(1, (100 - (Score - 75)));
-          if(Score >= 175 || randomnum <= 50)
+          if(Score >= 175 || randomnum <= 10)
           {
             addNumber(2, 3);
             addButtonPress(3);
@@ -251,12 +382,17 @@ void LedLoop() {
       if(CorrectPresses >= 10)
       {
         LedDelay = max(200, LedDelay * 0.90); // delay decreaded 10% every 10 correct presses
+        MusicSpeed = max(0.5, MusicSpeed * 0.99); // music speed increased 1%
         CorrectPresses = 0;
         digitalWrite(SpeedUpLed, HIGH);
         Serial.println("Speeding up...");
       }
     }
   }else if (GameStarted && defeat){
+    lcd.setCursor(0, 0);
+    lcd.print("Oops, you lost!    ");
+    lcd.setCursor(0, 1);
+    lcd.print("                   ");
     // Turn all leds on if defeat
     for(int i=0;i<3;i++)
     {
@@ -266,6 +402,11 @@ void LedLoop() {
       delay(300);
     }
     LedShow1();
+    int SavedNum = 0;
+    EEPROM.get(EEPROM_ADDR, SavedNum);
+    HighScore = max(HighScore, SavedNum);
+    HighScore = max(HighScore, Score);
+    EEPROM.put(EEPROM_ADDR, HighScore);
   }
 }
 
@@ -421,11 +562,15 @@ void addNumber(int arrayID, int number) {
 
 void removeNumber(int arrayID, int index) {
   if (arrayID == 0 && index < CurrentB_Size) {
+    Serial.print("Removed button ");
+    Serial.println(ButtonOrder[0]);
     for (int i = index; i < CurrentB_Size - 1; i++) {
       ButtonOrder[i] = ButtonOrder[i + 1];
     }
     CurrentB_Size--;
   } else if (arrayID == 1 && index < CurrentI_Size) {
+    Serial.print("Removed input ");
+    Serial.println(InputOrder[0]);
     for (int i = index; i < CurrentI_Size - 1; i++) {
       InputOrder[i] = InputOrder[i + 1];
     }
@@ -441,6 +586,9 @@ void removeNumber(int arrayID, int index) {
 }
 
 void CheckArrays() {
+  checkarrays++;
+  Serial.print("juuh ");
+  Serial.print(checkarrays);
   if(GameStarted && !defeat){
     if (CurrentB_Size > 0 && CurrentI_Size > 0) {
       if(!HardMode)
@@ -448,13 +596,14 @@ void CheckArrays() {
         if (ButtonOrder[0] == InputOrder[0]) {
           removeNumber(0, 0);
           removeNumber(1, 0);
-          Serial.println("Nice!");
-          Score++;
-          Serial.print("Score: ");
-          Serial.println(Score);
+          AddScore();
         } else {
           defeat = true;
           Serial.println("DEFEAT");
+          Serial.print("B: ");
+          Serial.print(ButtonOrder[0]);
+          Serial.print(" I: ");
+          Serial.println(InputOrder[0]);
         }
       }
       else
@@ -491,10 +640,7 @@ void CheckArrays() {
                 removeNumber(1, 0);
                 PreviousArray = ButtonInputAmount[0];
                 removeNumber(2, 0);
-                Serial.println("Nice!");
-                Score++;
-                Serial.print("Score: ");
-                Serial.println(Score);
+                AddScore();
               } else {
                 defeat = true;
                 Serial.println("DEFEAT, incorrect inputs");
@@ -528,10 +674,7 @@ void CheckArrays() {
                 removeNumber(1, 0);
                 PreviousArray = ButtonInputAmount[0];
                 removeNumber(2, 0);
-                Serial.println("Nice!");
-                Score++;
-                Serial.print("Score: ");
-                Serial.println(Score);
+                AddScore();
               } else {
                 defeat = true;
                 Serial.println("DEFEAT, B3 2");
@@ -550,10 +693,7 @@ void CheckArrays() {
             removeNumber(1, 0);
             PreviousArray = ButtonInputAmount[0];
             removeNumber(2, 0);
-            Serial.println("Nice!");
-            Score++;
-            Serial.print("Score: ");
-            Serial.println(Score);
+            AddScore();
           } else {
             defeat = true;
             Serial.println("DEFEAT, 1");
@@ -635,16 +775,20 @@ void LedShow2()
     {
       clearAllLeds();
       digitalWrite(Led1, HIGH);
-      if (digitalRead(StartButton) == threshold) return;
+      if (digitalRead(YellowButton) == threshold || digitalRead(GreenButton) == threshold || 
+      digitalRead(BlueButton) == threshold || digitalRead(OrangeButton) == threshold || StartGameStart) return;
       delay(LedShowDelay);
       digitalWrite(Led2, HIGH);
-      if (digitalRead(StartButton) == threshold) return;
+      if (digitalRead(YellowButton) == threshold || digitalRead(GreenButton) == threshold || 
+      digitalRead(BlueButton) == threshold || digitalRead(OrangeButton) == threshold || StartGameStart) return;
       delay(LedShowDelay);
       digitalWrite(Led3, HIGH);
-      if (digitalRead(StartButton) == threshold) return;
+      if (digitalRead(YellowButton) == threshold || digitalRead(GreenButton) == threshold || 
+      digitalRead(BlueButton) == threshold || digitalRead(OrangeButton) == threshold || StartGameStart) return;
       delay(LedShowDelay);
       digitalWrite(Led4, HIGH);
-      if (digitalRead(StartButton) == threshold) return;
+      if (digitalRead(YellowButton) == threshold || digitalRead(GreenButton) == threshold || 
+      digitalRead(BlueButton) == threshold || digitalRead(OrangeButton) == threshold || StartGameStart) return;
       delay(LedShowDelay);
 
       LedShowDelay -= 30;
@@ -655,7 +799,56 @@ void LedShow2()
     }
     LedShow2Reverse = !LedShow2Reverse;
     setAllLeds();
-    delay(500);
+    if (digitalRead(YellowButton) == threshold || digitalRead(GreenButton) == threshold || 
+    digitalRead(BlueButton) == threshold || digitalRead(OrangeButton) == threshold || StartGameStart) return;
+    delay(250);
+    if (digitalRead(YellowButton) == threshold || digitalRead(GreenButton) == threshold || 
+    digitalRead(BlueButton) == threshold || digitalRead(OrangeButton) == threshold || StartGameStart) return;
+    delay(250);
     clearAllLeds();
   }
+}
+
+void AddScore()
+{
+  Serial.println("Nice!");
+  Score++;
+  Serial.print("Score: ");
+  Serial.println(Score);
+  displaynum(Score);
+}
+//Alpon näyttö
+void displaynum(int num)
+{
+  int first = num % 10;
+  int middle = (num / 10) % 10;
+  int last = num / 100; 
+  digitalWrite(STCP_pin1,LOW);
+  for (int i = 7; i >= 0; i--)
+  {
+    digitalWrite(SHCP_pin1,LOW);
+    //Serial.print(digits[last][i]);
+    if (digits[last][i]==1) digitalWrite(DS_pin1, LOW);
+    if (digits[last][i]==0) digitalWrite(DS_pin1, HIGH);
+    digitalWrite(SHCP_pin1,HIGH);
+  }
+  //Serial.println(" ");
+  for (int i = 7; i >= 0; i--)
+  {
+    digitalWrite(SHCP_pin1,LOW);
+    //Serial.print(digits[middle][i]);
+    if (digits[middle][i]==1) digitalWrite(DS_pin1, LOW);
+    if (digits[middle][i]==0) digitalWrite(DS_pin1, HIGH);
+    digitalWrite(SHCP_pin1,HIGH);
+  }
+  //Serial.println(" ");
+  for (int i = 7; i >= 0; i--)
+  {
+    digitalWrite(SHCP_pin1,LOW);
+    //Serial.print(digits[first][i]);
+    if (digits[first][i]==1) digitalWrite(DS_pin1, LOW);
+    if (digits[first][i]==0) digitalWrite(DS_pin1, HIGH);
+    digitalWrite(SHCP_pin1,HIGH);
+  }
+  digitalWrite(STCP_pin1, HIGH); 
 }
